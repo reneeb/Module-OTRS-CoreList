@@ -3,9 +3,9 @@ package Module::OTRS::CoreList;
 use strict;
 use warnings;
 
-=head1 NAME
+our $VERSION = 0.01;
 
-Module::OTRS::CoreList - what modules shipped with versions of OTRS (>= 2.3.x)
+# ABSTRACT: what modules shipped with versions of OTRS (>= 2.3.x)
 
 =head1 SYNOPSIS
 

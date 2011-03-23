@@ -1,7 +1,9 @@
 Release history for Module::OTRS::CoreList
 
-0.02    
+0.02    23 Mar 2011
         + add script to get the modules
+        + add tests
+        + update module list up to OTRS 3.0.6
 
 0.01    23 Dec 2010
         + initial release

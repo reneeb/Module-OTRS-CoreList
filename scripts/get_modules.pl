@@ -32,7 +32,7 @@ my $flag = 0;
 
 FILE:
 for my $file ( @no_beta ) {
-    my ($major,$minor,$patch) = $file =~ m{ \A otrs - (\d+) \. (\d+) \. (\d+) }xms;
+    my ($major,$minor,$patch) = $file =~ m{ \A otrs - (\d+) \. (\d+) \. (\d+) \.tar\.gz  }xms;
     
     next FILE if !(defined $major and defined $minor);
     
@@ -57,15 +57,26 @@ for my $file ( @no_beta ) {
         next MODULE if $module =~ m{/scripts/};
     
         my ($otrs,$modfile) = $module =~ m{ \A otrs-(\d+\.\d+\.\d+)/(.*) }xms;
+
+        next MODULE if !$modfile;
+
         my $is_cpan = $modfile =~ m{cpan-lib}xms;
         
         my $key = $is_cpan ? 'cpan' : 'core';
+
+        next MODULE if !$modfile;
         
         (my $modulename = $modfile) =~ s{/}{::}g;
+
+        next MODULE if !$modulename;
+
         $modulename =~ s{\.pm}{}g;
         $modulename =~ s{Kernel::cpan-lib::}{}g if $is_cpan;
         
         $version = $otrs;
+
+        next MODULE if !$otrs;
+        next MODULE if !$modulename;
         
         $hash{$otrs}->{$key}->{$modulename} = 1;
     }

@@ -120,7 +120,143 @@ for my $otrs_version ( keys %hash ) {
 $Data::Dumper::Sortkeys = 1;
 
 if ( open my $fh, '>', 'corelist' ) {
-    print $fh Dumper \%global;
+    print $fh q~package Module::OTRS::CoreList;
+
+use strict;
+use warnings;
+
+# ABSTRACT: what modules shipped with versions of OTRS (>= 2.3.x)
+
+=head1 SYNOPSIS
+
+ use Module::OTRS::CoreList;
+
+ my @otrs_versions = Module::OTRS::CoreList->shipped(
+    '2.4.x',
+    'Kernel::System::DB',
+ );
+ 
+ # returns (2.4.0, 2.4.1, 2.4.2,...)
+ 
+ my @modules = Module::OTRS::CoreList->modules( '2.4.8' );
+ my @modules = Module::OTRS::CoreList->modules( '2.4.x' );
+ 
+ # methods to check for CPAN modules shipped with OTRS
+ 
+ my @cpan_modules = Module::OTRS::CoreList->cpan_modules( '2.4.x' );
+
+ my @otrs_versions = Module::OTRS::CoreList->shipped(
+    '3.0.x',
+    'CGI',
+ );
+
+=cut
+
+~;
+
+    print $fh "\n\n";
+
+    my $global_dump = Data::Dumper->Dump( [\%global], ['global'] );
+    $global_dump =~ s{\$global}{my \$global};
+    print $fh $global_dump;
+
     print $fh "\n";
-    print $fh Dumper \%hash;
+
+    my $modules_dump = Data::Dumper->Dump( [\%hash], ['modules'] );
+    $modules_dump =~ s{\$modules}{my \$modules};
+    print $fh $modules_dump;
+
+    print $fh "\n\n";
+
+    print $fh q#sub shipped {
+    my ($class,$version,$module) = @_;
+
+    return if !$version;
+    return if $version !~ m{ \A [0-9]+\.[0-9]\.(?:[0-9]+|x) \z }xms;
+
+    $version =~ s{\.}{\.}g;
+    $version =~ s{x}{.*};
+
+    my $version_re = qr{ \A $version \z }xms;
+
+    my @versions_with_module;
+
+    OTRSVERSION:
+    for my $otrs_version ( sort keys %{$modules} ) {
+        next unless $otrs_version =~ $version_re;
+
+        if ( $modules->{$otrs_version}->{core}->{$module} ||
+             $modules->{$otrs_version}->{cpan}->{$module} ||
+             $global->{core}->{$module} ||
+             $global->{cpan}->{$module} ) {
+            push @versions_with_module, $otrs_version;
+        }
+    }
+
+    return @versions_with_module;
+}
+
+sub modules {
+    my ($class,$version) = @_;
+
+    return if !$version;
+    return if $version !~ m{ \A [0-9]+\.[0-9]\.(?:[0-9]+|x) \z }xms;
+
+    $version =~ s{\.}{\.}g;
+    $version =~ s{x}{.*};
+
+    my $version_re = qr{ \A $version \z }xms;
+    my %modules_in_otrs;
+
+    OTRSVERSION:
+    for my $otrs_version ( keys %{$modules} ) {
+        next unless $otrs_version =~ $version_re;
+
+        my $hashref = $modules->{$otrs_version}->{core};
+        my @modulenames = keys %{$hashref || {}};
+
+        @modules_in_otrs{@modulenames} = (1) x @modulenames;
+    }
+
+    if ( $version =~ m{x} || exists $modules->{$version} ) {
+        my @global_modules = keys %{ $global->{core} };
+        @modules_in_otrs{@global_modules} = (1) x @global_modules;
+    }
+
+    return sort keys %modules_in_otrs;
+}
+
+sub cpan_modules {
+    my ($class,$version) = @_;
+
+    return if !$version =~ m{ \A [0-9]+\.[0-9]\.(?:[0-9]+|x) \z }xms;
+
+    $version =~ s{\.}{\.}g;
+    $version =~ s{x}{.*};
+
+    my $version_re = qr{ \A $version \z }xms;
+
+    my %modules_in_otrs;
+
+    OTRSVERSION:
+    for my $otrs_version ( keys %{ $modules } ) {
+        next unless $otrs_version =~ $version_re;
+
+        my $hashref = $modules->{$otrs_version}->{cpan};
+        my @modulenames = keys %{$hashref || {}};
+
+        @modules_in_otrs{@modulenames} = (1) x @modulenames;
+    }
+
+    if ( $version =~ m{x} || exists $modules->{$version} ) {
+        my @global_modules = keys %{ $global->{cpan} };
+        @modules_in_otrs{@global_modules} = (1) x @global_modules;
+    }
+
+    return sort keys %modules_in_otrs;
+}
+
+1;
+
+#;
 }

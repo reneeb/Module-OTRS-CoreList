@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 2;
+use Test::More;
 
 use File::Basename;
 use File::Spec;
@@ -29,3 +29,14 @@ my @cpan_modules = Module::OTRS::CoreList->cpan_modules( '3.0.1' );
 
 my @no_modules =  Module::OTRS::CoreList->cpan_modules( '3.0.0' );
 is scalar @no_modules, 0, 'no cpan modules in "3.0.0"';
+
+my @modules = Module::OTRS::CoreList->modules( '2.3.1' );
+ok grep{ $_ eq 'Kernel::Language::bb' }@modules, 'Found Kernel::Language::bb';
+
+@no_modules =  Module::OTRS::CoreList->cpan_modules();
+is scalar @no_modules, 0, 'cpan_modules() - no version';
+
+@no_modules =  Module::OTRS::CoreList->modules();
+is scalar @no_modules, 0, 'modules() - no version';
+
+done_testing();

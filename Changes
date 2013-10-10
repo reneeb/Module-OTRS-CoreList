@@ -1,9 +1,28 @@
 Release history for Module::OTRS::CoreList
 
-0.02    23 Mar 2011
+0.04    2013-10-10
+        + add more OTRS versions
+        + fix some bugs
+          - !$var =~   vs. $var !~
+          - return if no version is passed
+          - used a lexical variable instead of the global hash, so the wrong modules were returned
+        + fix format of Changes file
+
+        Module generation
+        + save modules in sqlite db, so that future generations just need to download new OTRS versions
+          - performance improvements
+          - more stable
+        + generate complete module, not only dump of hashes
+        + define version of module/dist in dist.ini
+
+        Dist::Zilla use:
+        + do not use PodWeaver as the .pm is too big, create POD manually
+        + use @Git Bundle
+
+0.02    2011-03-2011
         + add script to get the modules
         + add tests
         + update module list up to OTRS 3.0.6
 
-0.01    23 Dec 2010
+0.01    2010-12-23
         + initial release

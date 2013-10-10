@@ -21,7 +21,7 @@ my @otrs_versions = Module::OTRS::CoreList->shipped(
    'Kernel::System::DB',
 );
 
-my @check_otrs_version = qw(2.4.1 2.4.10 2.4.11 2.4.12 2.4.13 2.4.14 2.4.2 2.4.3 2.4.4 2.4.5 2.4.6 2.4.7 2.4.8 2.4.9);
+my @check_otrs_version = qw(2.4.1 2.4.10 2.4.11 2.4.12 2.4.13 2.4.14 2.4.15 2.4.2 2.4.3 2.4.4 2.4.5 2.4.6 2.4.7 2.4.8 2.4.9);
 
 is_deeply( \@otrs_versions, \@check_otrs_version, 'Kernel::System::DB in 2.4.x' );
 

@@ -6,9 +6,11 @@ use warnings;
 use Archive::Tar;
 use Clone qw(clone);
 use Data::Dumper;
+use File::Basename;
 use File::Spec;
 use File::Temp;
 use Net::FTP;
+use DBI;
 
 my $ftp_host  = 'ftp.otrs.org';
 my $local_dir = File::Temp::tempdir();
@@ -25,10 +27,23 @@ my @files   = $ftp->ls;
 my @tar_gz  = grep{ m{ \.tar\.gz \z }xms }@files;
 my @no_beta = grep{ !m{ -beta }xms }@tar_gz;
 
-my %global;
-my %hash;
+my $db_file   = File::Spec->catfile( dirname( __FILE__ ), '.otrs_modules.sqlite' );
+my $db_exists = -e $db_file;
+my $dbh       = DBI->connect( "DBI:SQLite:$db_file" ) or die DBI->errstr();
 
-my $flag = 0;
+if ( !$db_exists ) {
+    $dbh->do( 'CREATE TABLE modules (modname VARCHAR(255), otrs VARCHAR(10), modtype VARCHAR(4), PRIMARY KEY (modname, otrs) )' ); 
+}
+
+my $sth = $dbh->prepare( 'SELECT DISTINCT otrs FROM modules' );
+$sth->execute;
+
+my %otrs_versions;
+while ( my ($otrs) = $sth->fetchrow_array ) {
+    $otrs_versions{$otrs} = 1;
+}
+
+my $insert_sth = $dbh->prepare( 'INSERT INTO modules (modname, otrs, modtype) VALUES (?,?,?)' );
 
 FILE:
 for my $file ( @no_beta ) {
@@ -38,6 +53,9 @@ for my $file ( @no_beta ) {
     
     next FILE if $major < 2;
     next FILE if $major == 2 and $minor < 3;
+
+    my $otrs = join '.', $major, $minor, $patch;
+    next FILE if $otrs_versions{$otrs};
     
     print STDERR "Try to get $file\n";
     
@@ -77,47 +95,54 @@ for my $file ( @no_beta ) {
 
         next MODULE if !$otrs;
         next MODULE if !$modulename;
-        
-        $hash{$otrs}->{$key}->{$modulename} = 1;
-    }
-    
-    if ( !$flag ) {
-        %global = %{ clone( $hash{$version} ) };
-    }
-    else {
-        for my $type ( keys %{ $hash{$version} } ) {
-            for my $modulename ( keys %{ $hash{$version}->{$type} } ) {
-                $global{$type}->{$modulename}++;
-            }
-        }
-    }
-    
-    $flag++;
-}
 
-$flag--;
-
-# check if modules could stay in global hash
-my @to_delete;
-for my $type ( keys %global ) {
-    for my $modulename ( keys %{ $global{$type} } ) {
-        if ( $global{$type}->{$modulename} < $flag ) {
-            delete $global{$type}->{$modulename};
-        }
-        else {
-            push @to_delete, $modulename;
-        }
+        $insert_sth->execute( $modulename, $otrs, $key );
     }
 }
 
-# delete modules that are stored in global hash
-for my $otrs_version ( keys %hash ) {
-    for my $type ( keys %{ $hash{$otrs_version} } ) {
-        delete @{ $hash{$otrs_version}->{$type} }{@to_delete};
-    }
+my $versions_sth = $dbh->prepare( 'SELECT COUNT( DISTINCT otrs ) FROM modules' );
+$versions_sth->execute;
+my $versions_count;
+while (my $count = $versions_sth->fetchrow_array ) {
+    $versions_count = $count;
+}
+
+print STDERR "# Versions: $versions_count\n";
+
+my %global;
+my $global_sth = $dbh->prepare( 'SELECT modname, modtype, COUNT(otrs) AS versions FROM modules GROUP BY modname HAVING versions = ' . $versions_count ) or die $dbh->errstr;
+$global_sth->execute( ) or die $dbh->errstr;
+
+while ( my ($name,$type,$count) = $global_sth->fetchrow_array ) {
+    $global{$type}->{$name} = 1;
+}
+
+my %hash;
+my $local_sth = $dbh->prepare( 'SELECT modname, modtype, otrs FROM modules' );
+$local_sth->execute;
+
+while ( my ($name,$type,$otrs) = $local_sth->fetchrow_array ) {
+    next if $global{$type}->{$name};
+
+    $hash{$otrs}->{$type}->{$name} = 1;
 }
 
 $Data::Dumper::Sortkeys = 1;
+
+
+my $dist_ini_content = do{ local (@ARGV,$/) = File::Spec->catfile( dirname( __FILE__ ), '..', 'dist.ini' ); <> };
+
+my ($dist_version)  = $dist_ini_content =~ m{version \s* = \s* (.*?)\n}xms;
+my ($dist_author)   = $dist_ini_content =~ m{author \s* = \s* (.*?)\n}xms;
+my ($dist_license)  = $dist_ini_content =~ m{license \s* = \s* (.*?)\n}xms;
+my ($dist_c_holder) = $dist_ini_content =~ m{copyright_holder \s* = \s* (.*?)\n}xms;
+my ($dist_c_year)   = $dist_ini_content =~ m{copyright_year \s* = \s* (.*?)\n}xms;
+my $license_class   = 'Software::License::' . $dist_license;
+eval "require $license_class;";
+
+my $license_obj = $license_class->new({ holder => $dist_c_holder, year => $dist_c_year });
+
+my $dist_copyright = $license_obj->notice;
 
 if ( open my $fh, '>', 'corelist' ) {
     print $fh q~package Module::OTRS::CoreList;
@@ -126,35 +151,11 @@ use strict;
 use warnings;
 
 # ABSTRACT: what modules shipped with versions of OTRS (>= 2.3.x)
-
-=head1 SYNOPSIS
-
- use Module::OTRS::CoreList;
-
- my @otrs_versions = Module::OTRS::CoreList->shipped(
-    '2.4.x',
-    'Kernel::System::DB',
- );
- 
- # returns (2.4.0, 2.4.1, 2.4.2,...)
- 
- my @modules = Module::OTRS::CoreList->modules( '2.4.8' );
- my @modules = Module::OTRS::CoreList->modules( '2.4.x' );
- 
- # methods to check for CPAN modules shipped with OTRS
- 
- my @cpan_modules = Module::OTRS::CoreList->cpan_modules( '2.4.x' );
-
- my @otrs_versions = Module::OTRS::CoreList->shipped(
-    '3.0.x',
-    'CGI',
- );
-
-=cut
-
 ~;
 
     print $fh "\n\n";
+
+    print $fh "our \$VERSION = $dist_version;\n\n";
 
     my $global_dump = Data::Dumper->Dump( [\%global], ['global'] );
     $global_dump =~ s{\$global}{my \$global};
@@ -229,7 +230,7 @@ sub modules {
 sub cpan_modules {
     my ($class,$version) = @_;
 
-    return if !$version =~ m{ \A [0-9]+\.[0-9]\.(?:[0-9]+|x) \z }xms;
+    return if !$version || $version !~ m{ \A [0-9]+\.[0-9]\.(?:[0-9]+|x) \z }xms;
 
     $version =~ s{\.}{\.}g;
     $version =~ s{x}{.*};
@@ -257,6 +258,55 @@ sub cpan_modules {
 }
 
 1;
-
 #;
+
+print $fh qq~
+
+=pod
+
+=head1 NAME
+
+Module::OTRS::CoreList - what modules shipped with versions of OTRS (>= 2.3.x)
+
+=head1 VERSION
+
+version $dist_version
+
+~;
+
+print $fh q~=head1 SYNOPSIS
+
+ use Module::OTRS::CoreList;
+
+ my @otrs_versions = Module::OTRS::CoreList->shipped(
+    '2.4.x',
+    'Kernel::System::DB',
+ );
+ 
+ # returns (2.4.0, 2.4.1, 2.4.2,...)
+ 
+ my @modules = Module::OTRS::CoreList->modules( '2.4.8' );
+ my @modules = Module::OTRS::CoreList->modules( '2.4.x' );
+ 
+ # methods to check for CPAN modules shipped with OTRS
+ 
+ my @cpan_modules = Module::OTRS::CoreList->cpan_modules( '2.4.x' );
+
+ my @otrs_versions = Module::OTRS::CoreList->shipped(
+    '3.0.x',
+    'CGI',
+ );
+
+~;
+
+print $fh qq~
+=head1 AUTHOR
+
+$dist_author
+
+=head1 COPYRIGHT AND LICENSE
+
+$dist_copyright
+~;
+
 }

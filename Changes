@@ -1,5 +1,8 @@
 Release history for Module::OTRS::CoreList
 
+0.05    2014-04-14
+        + add more OTRS versions
+
 0.04    2013-10-10
         + add more OTRS versions
         + fix some bugs

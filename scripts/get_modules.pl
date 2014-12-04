@@ -157,6 +157,8 @@ use warnings;
 
     print $fh "our \$VERSION = $dist_version;\n\n";
 
+    $Data::Dumper::Indent = 0;
+
     my $global_dump = Data::Dumper->Dump( [\%global], ['global'] );
     $global_dump =~ s{\$global}{my \$global};
     print $fh $global_dump;

@@ -1,5 +1,12 @@
 Release history for Module::OTRS::CoreList
 
+0.10    2015-05-19
+
+ [OTRS]
+ * 3.3.13
+ * 4.0.7
+ * 4.0.8
+
 0.09    2015-02-25
 
  [OTRS]

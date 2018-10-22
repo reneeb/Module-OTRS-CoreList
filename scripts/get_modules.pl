@@ -6,6 +6,7 @@ use warnings;
 use Archive::Tar;
 use Clone qw(clone);
 use Data::Dumper;
+use FindBin ();
 use File::Basename;
 use File::Spec;
 use File::Temp;
@@ -150,7 +151,6 @@ if ( open my $fh, '>', 'corelist' ) {
 use strict;
 use warnings;
 
-# ABSTRACT: what modules shipped with versions of OTRS (>= 2.3.x)
 ~;
 
     print $fh "\n\n";
@@ -262,10 +262,8 @@ sub cpan_modules {
 1;
 #;
 
-print $fh qq~
-
-=pod
-
+    open my $pod_fh, '>', $FindBin::Bin . '/../lib/Module/OTRS/CoreList.pod';
+print $pod_fh qq~
 =head1 NAME
 
 Module::OTRS::CoreList - what modules shipped with versions of OTRS (>= 2.3.x)
@@ -276,7 +274,7 @@ version $dist_version
 
 ~;
 
-print $fh q~=head1 SYNOPSIS
+print $pod_fh q~=head1 SYNOPSIS
 
  use Module::OTRS::CoreList;
 
@@ -301,7 +299,7 @@ print $fh q~=head1 SYNOPSIS
 
 ~;
 
-print $fh qq~
+print $pod_fh qq~
 =head1 AUTHOR
 
 $dist_author

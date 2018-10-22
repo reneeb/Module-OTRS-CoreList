@@ -148,6 +148,8 @@ my $dist_copyright = $license_obj->notice;
 if ( open my $fh, '>', 'corelist' ) {
     print $fh q~package Module::OTRS::CoreList;
 
+# ABSTRACT: what modules shipped with versions of OTRS (>= 2.3.x) 
+
 use strict;
 use warnings;
 
@@ -260,6 +262,11 @@ sub cpan_modules {
 }
 
 1;
+
+__END__
+
+=for Pod::Coverage modules shipped cpan_modules
+
 #;
 
     open my $pod_fh, '>', $FindBin::Bin . '/../lib/Module/OTRS/CoreList.pod';

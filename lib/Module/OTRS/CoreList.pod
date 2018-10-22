@@ -1,3 +1,4 @@
+# PODNAME: CoreList.pod
 
 =head1 NAME
 

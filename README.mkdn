@@ -4,11 +4,11 @@
 
 # NAME
 
-CoreList.pod
+Module::OTRS::CoreList
 
 # VERSION
 
-version 0.14
+version 0.15
 
 # SYNOPSIS
 
@@ -39,7 +39,7 @@ Module::OTRS::CoreList - what modules shipped with versions of OTRS (>= 2.3.x)
 
 # VERSION
 
-version 0.14
+version 0.15
 
 
 

@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/reneeb/Module-OTRS-CoreList.svg?branch=master)](https://travis-ci.org/reneeb/Module-OTRS-CoreList)
-[![Kwalitee status](http://cpants.cpanauthors.org/dist/Module-OTRS-CoreList.png)](http://cpants.charsbar.org/dist/overview/Module-OTRS-CoreList)
+[![Kwalitee status](https://cpants.cpanauthors.org/dist/Module-OTRS-CoreList.png)](https://cpants.cpanauthors.org/dist/Module-OTRS-CoreList)
 [![GitHub issues](https://img.shields.io/github/issues/reneeb/Module-OTRS-CoreList.svg)](https://github.com/reneeb/Module-OTRS-CoreList/issues)
 
 # NAME

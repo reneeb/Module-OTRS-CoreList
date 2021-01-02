@@ -93,7 +93,7 @@ Renee Baecker <reneeb@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2016 by Renee Baecker.
+This software is Copyright (c) 2016-2021 by Renee Baecker.
 
 This is free software, licensed under:
 
@@ -105,7 +105,7 @@ Renee Baecker <reneeb@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2016 by Renee Baecker.
+This software is Copyright (c) 2016-2021 by Renee Baecker.
 
 This is free software, licensed under:
 

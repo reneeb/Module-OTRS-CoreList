@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use 5.008;
 use Test::More;
 
 use File::Basename;

@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use 5.008;
 
 use Archive::Tar;
 use Clone qw(clone);

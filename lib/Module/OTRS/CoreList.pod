@@ -16,14 +16,14 @@ version 0.15
     '2.4.x',
     'Kernel::System::DB',
  );
- 
+
  # returns (2.4.0, 2.4.1, 2.4.2,...)
- 
+
  my @modules = Module::OTRS::CoreList->modules( '2.4.8' );
  my @modules = Module::OTRS::CoreList->modules( '2.4.x' );
- 
+
  # methods to check for CPAN modules shipped with OTRS
- 
+
  my @cpan_modules = Module::OTRS::CoreList->cpan_modules( '2.4.x' );
 
  my @otrs_versions = Module::OTRS::CoreList->shipped(

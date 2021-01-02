@@ -33,7 +33,7 @@ my $db_exists = -e $db_file;
 my $dbh       = DBI->connect( "DBI:SQLite:$db_file" ) or die DBI->errstr();
 
 if ( !$db_exists ) {
-    $dbh->do( 'CREATE TABLE modules (modname VARCHAR(255), otrs VARCHAR(10), modtype VARCHAR(4), PRIMARY KEY (modname, otrs) )' ); 
+    $dbh->do( 'CREATE TABLE modules (modname VARCHAR(255), otrs VARCHAR(10), modtype VARCHAR(4), PRIMARY KEY (modname, otrs) )' );
 }
 
 my $sth = $dbh->prepare( 'SELECT DISTINCT otrs FROM modules' );
@@ -49,49 +49,49 @@ my $insert_sth = $dbh->prepare( 'INSERT INTO modules (modname, otrs, modtype) VA
 FILE:
 for my $file ( @no_beta ) {
     my ($major,$minor,$patch) = $file =~ m{ \A otrs - (\d+) \. (\d+) \. (\d+) \.tar\.gz  }xms;
-    
+
     next FILE if !(defined $major and defined $minor);
-    
+
     next FILE if $major < 2;
     next FILE if $major == 2 and $minor < 3;
 
     my $otrs = join '.', $major, $minor, $patch;
     next FILE if $otrs_versions{$otrs};
-    
+
     print STDERR "Try to get $file\n";
-    
+
     my $local_path = File::Spec->catfile( $local_dir, $file );
-    
+
     $ftp->binary;
     $ftp->get( $file, $local_path );
-    
+
     my $tar              = Archive::Tar->new( $local_path, 1 );
     my @files_in_archive = $tar->list_files;
     my @modules          = grep{ m{ \.pm \z }xms }@files_in_archive;
-    
+
     my $version = '';
-    
+
     MODULE:
     for my $module ( @modules ) {
         next MODULE if $module =~ m{/scripts/};
-    
+
         my ($otrs,$modfile) = $module =~ m{ \A otrs-(\d+\.\d+\.\d+)/(.*) }xms;
 
         next MODULE if !$modfile;
 
         my $is_cpan = $modfile =~ m{cpan-lib}xms;
-        
+
         my $key = $is_cpan ? 'cpan' : 'core';
 
         next MODULE if !$modfile;
-        
+
         (my $modulename = $modfile) =~ s{/}{::}g;
 
         next MODULE if !$modulename;
 
         $modulename =~ s{\.pm}{}g;
         $modulename =~ s{Kernel::cpan-lib::}{}g if $is_cpan;
-        
+
         $version = $otrs;
 
         next MODULE if !$otrs;
@@ -148,7 +148,7 @@ my $dist_copyright = $license_obj->notice;
 if ( open my $fh, '>', 'corelist' ) {
     print $fh q~package Module::OTRS::CoreList;
 
-# ABSTRACT: what modules shipped with versions of OTRS (>= 2.3.x) 
+# ABSTRACT: what modules shipped with versions of OTRS (>= 2.3.x)
 
 use strict;
 use warnings;
@@ -290,14 +290,14 @@ print $pod_fh q~=head1 SYNOPSIS
     '2.4.x',
     'Kernel::System::DB',
  );
- 
+
  # returns (2.4.0, 2.4.1, 2.4.2,...)
- 
+
  my @modules = Module::OTRS::CoreList->modules( '2.4.8' );
  my @modules = Module::OTRS::CoreList->modules( '2.4.x' );
- 
+
  # methods to check for CPAN modules shipped with OTRS
- 
+
  my @cpan_modules = Module::OTRS::CoreList->cpan_modules( '2.4.x' );
 
  my @otrs_versions = Module::OTRS::CoreList->shipped(
